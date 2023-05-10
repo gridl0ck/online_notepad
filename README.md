@@ -11,6 +11,7 @@ As of now, the only functionality that I need for this application is the abilit
   - Create a note
   - Delete a note
   - List all of your notes
+  - 
 I am not sure I will add anything else to this, but there is a potential idea to create a client to allow decentralized storage of your notes, then uploading and ensuring the database matches the server one.
 
 ## Usage
