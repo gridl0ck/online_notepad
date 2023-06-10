@@ -16,8 +16,10 @@ def handle_client(client_socket):
     server_func.clear_screen(client_socket)
     client_socket.send("Welcome to the Online Notepad!\n\n".encode())
     resp_code = -1
+    user_id = -1
     while resp_code == -1:
         resp_code = server_func.print_main_menu(client_socket)
+        user_id = resp_code
 
     if resp_code == -2:
         return
@@ -26,7 +28,7 @@ def handle_client(client_socket):
         server_func.print_session_menu(client_socket)
         client_socket.send("Please enter your choice: ".encode())
         choice = client_socket.recv(1024).strip().decode()
-        opcode = server_func.handle_session_input(choice, resp_code, client_socket)
+        opcode = server_func.handle_session_input(choice, user_id, client_socket)
         if opcode == 4:
             client_socket.send("Goodbye!".encode())
             time.sleep(2)

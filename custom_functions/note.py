@@ -1,7 +1,13 @@
-import sql_stuff.sql_funcs as sql_funcs
 from sql_stuff.sql_funcs import create_connection
 from sql_stuff.sql_funcs import DATABASE_LOCATION
+import sys
 
+### TODO
+# write a function to go back through all user notes and update the ID
+# if a note was deleted and the number is less than the number of total notes
+
+
+# This function should be able to edit the id of the note 
 def edit_note_id(cs, uid, op, note_id):
     """Edit the next_note_id for a user"""
     if note_id == 0 and op != "add": # redundant check
@@ -18,11 +24,38 @@ def edit_note_id(cs, uid, op, note_id):
     conn.close()
 
 
+
+# This is a temporary test of functionality that the above function should be doign
+# OPCODES: 
+# 3 = add
+# 4 = subtract
+def update_user_note_count(cs, uid, op):
+
+    q = """SELECT next_note_id FROM users WHERE id=?;"""
+    conn = create_connection(DATABASE_LOCATION)
+    cursor = conn.cursor()
+
+    cursor.execute(q, (uid,))
+    note_id = cursor.fetchone()[0]
+    conn.close()
+    print(note_id)
+    # sys.exit(0)
+    updated_value = int(note_id) + 1
+    q2 = """UPDATE users SET next_note_id=? WHERE id=?;"""
+    conn = create_connection(DATABASE_LOCATION)
+    cursor = conn.cursor()
+    cursor.execute(q2, (str(updated_value),uid,))
+    cursor.execute(q, (uid,))
+    new_id = cursor.fetchone()[0]
+    print(new_id)
+    conn.close()
+    # sys.exit(0)
+
 def create_note(u, cs):
     """Create a note for a user"""
     uid = u
     conn = create_connection(DATABASE_LOCATION)
-    
+
     cs.send("Enter your note: ".encode())
     message = cs.recv(1024).decode()
     cursor = conn.cursor()
@@ -30,12 +63,13 @@ def create_note(u, cs):
     cursor.execute(q, (uid,))
     curr_note_id = cursor.fetchone()[0]
     query = """INSERT INTO notes (user_id, note, note_id) VALUES (?, ?, ?);"""
-    print(f"Note ID to be added: {q}")
+    print(f"Note ID to be added: {curr_note_id}")
     cursor.execute(query, (uid, message, curr_note_id))
     conn.commit()
     conn.close()
     print(f"Current ID of the current note {curr_note_id}")
     edit_note_id(cs, uid, "add", curr_note_id)
+    update_user_note_count(cs, uid, 3)
     cs.send("Note created successfully!".encode())
     
 

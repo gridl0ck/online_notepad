@@ -11,6 +11,13 @@ def clear_screen(client_socket):
             client_socket.send(bytes(clear_screen_command, encoding='utf-8'))
 
 
+
+# Prints the main menu for the program
+# RETURN CODES:
+# ret - the user id of the logged in user IF THEY EXIST AND SUCCESSFULLY LOGGED IN
+# -1 - generic ret code (keeps program looping)
+# -2 - exit the program
+
 def print_main_menu(cs):
     cs.send("--------MENU----------\n".encode())
     cs.send("1. Login\n".encode())
@@ -31,7 +38,6 @@ def print_main_menu(cs):
     else:
         clear_screen(cs)
         return -1
-
 
 
 
@@ -104,7 +110,7 @@ def login(client_socket):
             client_socket.send(username_prompt.encode())
             username = client_socket.recv(1024).strip().decode()
             password = ""
-            ### REMOVE THIS BECAUSE REGISTRATION EXISTS
+            ### DEPRECATED - REMOVE THIS BECAUSE REGISTRATION EXISTS
             if username == "creatister": # CREATE A NEW USER BUT THIS IS NOT ADVERTISED TO USERS. ONLY FOR TESTING
                 # combination of create and register
                 client_socket.send("\nEnter a username for the new user: ".encode())

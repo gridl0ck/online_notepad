@@ -94,7 +94,7 @@ def create_users_table(conn):
         cursor = conn.cursor()
         query = """CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    next_note_id INTEGER DEFAULT 0,
+                    next_note_id INTEGER,
                     username TEXT NOT NULL UNIQUE,
                     password TEXT NOT NULL
                 );"""
