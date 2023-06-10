@@ -6,10 +6,15 @@ import custom_functions.server_func as server_func
 import os
 import time
 
+#TODO
+# Create server-wide windows netcat checks for compatibility
+# Leave comments on server functions, note functions, and sql helper functions
+# Remove extra functions/move to correct classes
+# Standardize response codes
+
 def handle_client(client_socket):
-    client_socket.send("Welcome to the Online Notepad!".encode())
-    time.sleep(2)
     server_func.clear_screen(client_socket)
+    client_socket.send("Welcome to the Online Notepad!\n\n".encode())
     resp_code = -1
     while resp_code == -1:
         resp_code = server_func.print_main_menu(client_socket)

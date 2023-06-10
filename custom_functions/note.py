@@ -10,8 +10,10 @@ def edit_note_id(cs, uid, op, note_id):
     vall = 1 if op == "add" else -1
     conn = create_connection(DATABASE_LOCATION)
     cursor = conn.cursor()
+    updated_id = int(note_id) + vall
+    print(f"SETTING next_note_id TO {updated_id}")
     query = """UPDATE users SET next_note_id=? WHERE id=?;"""
-    cursor.execute(query, (uid, note_id + vall,))
+    cursor.execute(query, (uid, updated_id,))
     conn.commit()
     conn.close()
 
@@ -28,11 +30,12 @@ def create_note(u, cs):
     cursor.execute(q, (uid,))
     curr_note_id = cursor.fetchone()[0]
     query = """INSERT INTO notes (user_id, note, note_id) VALUES (?, ?, ?);"""
-
+    print(f"Note ID to be added: {q}")
     cursor.execute(query, (uid, message, curr_note_id))
-    edit_note_id(cs, uid, "add", curr_note_id)
     conn.commit()
     conn.close()
+    print(f"Current ID of the current note {curr_note_id}")
+    edit_note_id(cs, uid, "add", curr_note_id)
     cs.send("Note created successfully!".encode())
     
 

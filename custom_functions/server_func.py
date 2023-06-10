@@ -1,6 +1,11 @@
 import custom_functions.note as notes
 import sql_stuff.sql_funcs as sql_funcs
 import time
+
+# provides a quick way to clear the screen of a client connection using a 
+# simple escape sequence
+
+# ONLY WORKS FOR LINUX
 def clear_screen(client_socket):
             clear_screen_command = '\033[2J\033[H' # This escape sequence clears the Linux terminal screen.
             client_socket.send(bytes(clear_screen_command, encoding='utf-8'))
@@ -23,6 +28,9 @@ def print_main_menu(cs):
         return -1
     elif choice == "3":
         return -2
+    else:
+        clear_screen(cs)
+        return -1
 
 
 
@@ -72,13 +80,18 @@ def register(cs):
         cs.send("Enter a password: ".encode())
         password = cs.recv(1024).strip().decode()
 
-        ue = sql_funcs.check_if_user_exists(username)
+        ue = sql_funcs.check_if_user_exists(username, Debug=True)
+        
         if not ue:
             sql_funcs.insert_user(username, password)
             cs.send("User created! Please login.\n".encode())
             time.sleep(2)
             clear_screen(cs)
             return
+        else:
+            cs.send("That username is taken! Please try again.\n".encode())
+            time.sleep(2)
+            clear_screen(cs)
 
 def login(client_socket):
     username_prompt = "Enter your username: "
@@ -91,6 +104,7 @@ def login(client_socket):
             client_socket.send(username_prompt.encode())
             username = client_socket.recv(1024).strip().decode()
             password = ""
+            ### REMOVE THIS BECAUSE REGISTRATION EXISTS
             if username == "creatister": # CREATE A NEW USER BUT THIS IS NOT ADVERTISED TO USERS. ONLY FOR TESTING
                 # combination of create and register
                 client_socket.send("\nEnter a username for the new user: ".encode())

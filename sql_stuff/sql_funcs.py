@@ -20,17 +20,24 @@ def check_database():
         create_notes_table(conn)
         print("Database and tables have been created.")
         conn.close()
+    conn.close()
 
-def check_if_user_exists(username):
+def check_if_user_exists(username, Debug=False):
     conn = create_connection(DATABASE_LOCATION)
     cursor = conn.cursor()
     query = "SELECT * FROM users WHERE username=?"
     cursor.execute(query, (username,))
     user = cursor.fetchone()
+    if Debug:
+        print(f"Looking for user: {username}...")
+        print(f"Results of query: {cursor.fetchall()}")
     if user is None:
+        conn.close()
         return False
     else:
+        conn.close()
         return True
+    
 
 def check_if_password_correct(username, password):
     conn = create_connection(DATABASE_LOCATION)
@@ -39,8 +46,10 @@ def check_if_password_correct(username, password):
     cursor.execute(query, (username, password))
     user = cursor.fetchone()
     if user is None:
+        conn.close()
         return False
     else:
+        conn.close()
         return True
 
 def check_login(username, password):
@@ -48,9 +57,11 @@ def check_login(username, password):
     conn = create_connection(DATABASE_LOCATION)
     user_exists = check_if_user_exists(username)
     if not user_exists:
+        conn.close()
         return False
     else:
         password_correct = check_if_password_correct(username, password)
+        conn.close()
         if not password_correct:
             return False
         else:
@@ -72,6 +83,7 @@ def check_if_db_exists(database_name):
 
     try: 
         conn = create_connection(database_name)
+        conn.close()
         return True
     except Error as e:
         return False
