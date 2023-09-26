@@ -1,16 +1,33 @@
 import sqlite3
 from sqlite3 import Error
-import hashlib
+import hashlib, os
 
-#Change this to the location of the database
-DATABASE_LOCATION = "/home/gridl0ck/proj/online_notepad/note_app.db"
-#DATABASE_LOCATION = "C:\Users\Public\Documents\online_notepad\note_app.db"
+DATABASE_LOCATION = None
+
+def init_sql_vars():
+    global DATABASE_LOCATION
+    DATABASE_LOCATION = os.environ.get('DATABASE_LOCATION')
+
+
+def create_connection(database_name=None):
+    """Creates a connection to a SQLite database"""
+    global DATABASE_LOCATION
+
+    if database_name == None:
+        database_name = DATABASE_LOCATION
+    
+    conn = None
+    try:
+        conn = sqlite3.connect(database_name)
+        # print(f'Successful connection to {database_name}...')
+    except Error as e:
+        print(e)
+
+    return conn
+
 
 def check_database():
-    database_name = DATABASE_LOCATION
-
-    conn = create_connection(database_name)
-
+    conn = create_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
     table_exists = cursor.fetchone()
@@ -23,7 +40,7 @@ def check_database():
     conn.close()
 
 def check_if_user_exists(username, Debug=False):
-    conn = create_connection(DATABASE_LOCATION)
+    conn = create_connection()
     cursor = conn.cursor()
     query = "SELECT * FROM users WHERE username=?"
     cursor.execute(query, (username,))
@@ -40,7 +57,8 @@ def check_if_user_exists(username, Debug=False):
     
 
 def check_if_password_correct(username, password):
-    conn = create_connection(DATABASE_LOCATION)
+    
+    conn = create_connection()
     cursor = conn.cursor()
     query = "SELECT * FROM users WHERE username=? AND password=?"
     cursor.execute(query, (username, password))
@@ -53,8 +71,9 @@ def check_if_password_correct(username, password):
         return True
 
 def check_login(username, password):
+    
     """Check if user exists and if password is correct"""
-    conn = create_connection(DATABASE_LOCATION)
+    conn = create_connection()
     user_exists = check_if_user_exists(username)
     if not user_exists:
         conn.close()
@@ -66,17 +85,6 @@ def check_login(username, password):
             return False
         else:
             return True
-
-def create_connection(database_name):
-    """Creates a connection to a SQLite database"""
-    conn = None
-    try:
-        conn = sqlite3.connect(database_name)
-        print(f'Successful connection to {database_name}...')
-    except Error as e:
-        print(e)
-
-    return conn
 
 def check_if_db_exists(database_name):
     """Check if database exists"""
@@ -94,7 +102,7 @@ def create_users_table(conn):
         cursor = conn.cursor()
         query = """CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    next_note_id INTEGER,
+                    next_note_id INTEGER DEFAULT 1,
                     username TEXT NOT NULL UNIQUE,
                     password TEXT NOT NULL
                 );"""
@@ -104,7 +112,15 @@ def create_users_table(conn):
         print(e)
 
 def create_notes_table(conn):
-    # Create a table named 'notes' with 'id', 'user_id' and 'text' columns
+    """Create a table named 'notes' with 'id', 'user_id' and 'text' columns
+    """
+
+    """
+    Parameters:
+        id: Global unique identifier for a note
+        user_id: The user_id of the user who created the note
+        note_id: The note_id of the note in regards to the user who created it
+    """
     try:
         cursor = conn.cursor()
         query = """CREATE TABLE IF NOT EXISTS notes (
@@ -122,7 +138,9 @@ def create_notes_table(conn):
 
 # Define a function to hash the password
 def hash_password(password):
-    # Convert the password to bytes and hash it using SHA256
+    """
+    Convert the password to bytes and hash it using SHA256
+    """
     password_bytes = password.encode('utf-8')
     hashed_bytes = hashlib.sha256(password_bytes).digest()
 
@@ -132,7 +150,10 @@ def hash_password(password):
 
 
 def username_exists(username):
-    # Connect to the database and check if a row exists in the 'users' table with the given username
+    global DATABASE_LOCATION
+    """
+    Connect to the database and check if a row exists in the 'users' table with the given username
+    """
     conn = sqlite3.connect(DATABASE_LOCATION)
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE username = ?', (username,))
@@ -148,10 +169,14 @@ def insert_user(username, password):
     if username_exists(username):
         return False
 
-    conn = sqlite3.connect('/home/gridl0ck/proj/online_notepad/note_app.db')
+    conn = create_connection()
     c = conn.cursor()
-
-    c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
+    try:
+        c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
+    except Exception as e:
+        if "UNIQUE" in e:
+            print("ERR: Username already exists. Please Pick Another!")
+            time.sleep(3)
 
     conn.commit()
     conn.close()
@@ -160,7 +185,7 @@ def authenticate_user(username, password):
     # Hash the password
     hashed_password = hash_password(password)
 
-    conn = sqlite3.connect(DATABASE_LOCATION)
+    conn = create_connection()
     c = conn.cursor()
     c.execute('SELECT password, id FROM users WHERE username = ?', (username,))
     result = c.fetchone()

@@ -1,8 +1,9 @@
 import socket
 import threading
 import sqlite3
-import sql_stuff.sql_funcs as sql_funcs
+import custom_functions.sql_funcs as sql_funcs
 import custom_functions.server_func as server_func
+import custom_functions.note as note
 import os
 import time
 
@@ -11,6 +12,20 @@ import time
 # Leave comments on server functions, note functions, and sql helper functions
 # Remove extra functions/move to correct classes
 # Standardize response codes
+
+DATABASE_LOCATION = None
+
+def init_database_location():
+    global DATABASE_LOCATION
+
+    directory = os.path.expanduser("~")
+    filename = os.path.join(directory, "notes-database.db")
+    # print(filename)
+    os.environ['DATABASE_LOCATION'] = filename
+
+    sql_funcs.init_sql_vars()
+    server_func.init_server_vars()
+    note.init_note_vars()
 
 def handle_client(client_socket):
     server_func.clear_screen(client_socket)
@@ -38,6 +53,9 @@ def handle_client(client_socket):
     client_socket.close()
 
 def main():
+
+    init_database_location()
+    # print(os.getenv('DATABASE_LOCATION'))
 
     sql_funcs.check_database()
     host = "0.0.0.0"  # Bind to all available network interfaces

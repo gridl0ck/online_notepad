@@ -1,16 +1,23 @@
 import custom_functions.note as notes
-import sql_stuff.sql_funcs as sql_funcs
+import custom_functions.sql_funcs as sql_funcs
 import time
+import os
 
 # provides a quick way to clear the screen of a client connection using a 
 # simple escape sequence
+
+#Change this to the location of the database
+DATABASE_LOCATION = None
+
+def init_server_vars():
+    global DATABASE_LOCATION
+    DATABASE_LOCATION = os.environ.get('DATABASE_LOCATION')
+
 
 # ONLY WORKS FOR LINUX
 def clear_screen(client_socket):
             clear_screen_command = '\033[2J\033[H' # This escape sequence clears the Linux terminal screen.
             client_socket.send(bytes(clear_screen_command, encoding='utf-8'))
-
-
 
 # Prints the main menu for the program
 # RETURN CODES:

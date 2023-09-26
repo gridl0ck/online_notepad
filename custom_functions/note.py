@@ -1,11 +1,15 @@
-from sql_stuff.sql_funcs import create_connection
-from sql_stuff.sql_funcs import DATABASE_LOCATION
-import sys
+import custom_functions.sql_funcs
+import sys, os
+
+DATABASE_LOCATION = None
+
+def init_note_vars():
+    global DATABASE_LOCATION
+    DATABASE_LOCATION = os.environ.get('DATABASE_LOCATION')
 
 ### TODO
 # write a function to go back through all user notes and update the ID
 # if a note was deleted and the number is less than the number of total notes
-
 
 # This function should be able to edit the id of the note 
 def edit_note_id(cs, uid, op, note_id):
@@ -14,7 +18,7 @@ def edit_note_id(cs, uid, op, note_id):
         cs.send("No notes to delete\n".encode())
         return
     vall = 1 if op == "add" else -1
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
     updated_id = int(note_id) + vall
     print(f"SETTING next_note_id TO {updated_id}")
@@ -24,15 +28,19 @@ def edit_note_id(cs, uid, op, note_id):
     conn.close()
 
 
-
 # This is a temporary test of functionality that the above function should be doign
 # OPCODES: 
 # 3 = add
 # 4 = subtract
 def update_user_note_count(cs, uid, op):
-
+    """
+    Parameters:
+        cs: Client Socket
+        uid: User ID
+        op: Operation
+    """
     q = """SELECT next_note_id FROM users WHERE id=?;"""
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
 
     cursor.execute(q, (uid,))
@@ -41,20 +49,22 @@ def update_user_note_count(cs, uid, op):
     print(note_id)
     # sys.exit(0)
     updated_value = int(note_id) + 1
+    print(type(updated_value))
     q2 = """UPDATE users SET next_note_id=? WHERE id=?;"""
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
-    cursor.execute(q2, (str(updated_value),uid,))
+    cursor.execute(q2, (updated_value,uid,))
+    conn.commit()
     cursor.execute(q, (uid,))
     new_id = cursor.fetchone()[0]
-    print(new_id)
+    print(f"Next Note ID: {new_id}")
     conn.close()
     # sys.exit(0)
 
 def create_note(u, cs):
     """Create a note for a user"""
     uid = u
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
 
     cs.send("Enter your note: ".encode())
     message = cs.recv(1024).decode()
@@ -75,7 +85,7 @@ def create_note(u, cs):
 
 def get_notes(id):
     """Get all notes for a user"""
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
     query = """SELECT * FROM notes WHERE user_id=?;"""
     cursor.execute(query, (id,))
@@ -83,15 +93,10 @@ def get_notes(id):
     conn.close()
     return notes
 
-def print_notes(notes, cs):
-    """Print all notes for a user"""
-    # cs.send("Here are your notes:\n".encode())
-    for note in notes:
-        cs.send(f"{note[0]}: {note[2]}\n".encode())
 
 def delete_note(cs, uid):
     """Delete a note for a user"""
-    conn = create_connection(DATABASE_LOCATION)
+    conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
     notes = get_notes(uid)
     if len(notes) == 0:
