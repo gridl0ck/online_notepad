@@ -13,14 +13,17 @@ import time
 # Remove extra functions/move to correct classes
 # Standardize response codes
 
-DATABASE_LOCATION = None
+def init_database_location(directory=None):
+    """Takes in a directory and creates a database in that location"""
+    if directory is None:
 
-def init_database_location():
-    global DATABASE_LOCATION
+        directory = os.path.expanduser("~")
+        # print(filename)
+    else:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
-    directory = os.path.expanduser("~")
     filename = os.path.join(directory, "notes-database.db")
-    # print(filename)
     os.environ['DATABASE_LOCATION'] = filename
 
     sql_funcs.init_sql_vars()
@@ -55,7 +58,6 @@ def handle_client(client_socket):
 def main():
 
     init_database_location()
-    # print(os.getenv('DATABASE_LOCATION'))
 
     sql_funcs.check_database()
     host = "0.0.0.0"  # Bind to all available network interfaces

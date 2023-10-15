@@ -63,14 +63,13 @@ def handle_session_input(inp, uid, cs):
         return 1
     elif inp == "2":
         user_notes = notes.get_notes(uid)
-        for n in user_notes:
-            print(n)
-            cs.send(f"{n}\n".encode())
+        notes.print_notes(cs, user_notes)
         cs.send("Press enter to continue...".encode())
         cs.recv(1024)
         # return 2
     elif inp == "3":
-        return("Delete a note")
+        # return("Delete a note")
+        notes.delete_note(cs, uid)
         # return 3
     elif inp == "4":
         # return("Exit")

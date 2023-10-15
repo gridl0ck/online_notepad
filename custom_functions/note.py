@@ -93,17 +93,32 @@ def get_notes(id):
     conn.close()
     return notes
 
+def print_notes(cs, notes):
+    if len(notes) < 1:
+        cs.send("User has no notes...\n".encode())
+        time.sleep(2)
+        return -1
+    print()
+    for n in notes:
+        print(n[3])
+        cs.send(f"{n[0]}\n".encode())
 
 def delete_note(cs, uid):
     """Delete a note for a user"""
     conn = custom_functions.sql_funcs.create_connection()
     cursor = conn.cursor()
     notes = get_notes(uid)
-    if len(notes) == 0:
-        cs.send("User has no notes.\n".encode())
+    success = print_notes(cs, notes)
+    nid = None
+    if success == -1:
         return
     cs.send("Enter the ID of the note you want to delete: ".encode())
-    query = """DELETE FROM notes WHERE note_id=? AND user_id=?;"""
-    cursor.execute(query, (nid,uid))
+    try:
+        nid = int(cs.recv(1024).decode())
+    except Exception as e:
+        print(e)
+        return
+    query = """DELETE FROM notes WHERE user_id=? AND note_id=?;"""
+    cursor.execute(query, (uid,nid))
     conn.commit()
     conn.close()
